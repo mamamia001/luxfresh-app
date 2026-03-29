@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LuxFresh | Mombasa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --brand: #16a34a; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; overflow-x: hidden; }
+        .bg-animate { position: fixed; inset: 0; z-index: -1; opacity: 0.15; pointer-events: none; }
+        .leaf { position: absolute; animation: float 15s linear infinite; }
+        @keyframes float { 0% { transform: translateY(110vh) rotate(0); } 100% { transform: translateY(-10vh) rotate(360deg); } }
+        .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.5); }
+        .btn-brand { background-color: var(--brand); color: white; }
+        .text-brand { color: var(--brand); }
+        .active-pill { background-color: var(--brand); color: white !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="pb-24">
+    <div class="bg-animate" id="bg-icons"></div>
+    <div id="ann-bar" class="btn-brand py-2 px-4 text-[9px] font-black uppercase text-center tracking-[0.3em] hidden shadow-lg"></div>
+
+    <nav class="sticky top-0 z-50 glass p-4 flex justify-between items-center border-b border-white">
+        <h1 class="font-black text-xl italic uppercase tracking-tighter">Lux<span class="text-brand">Fresh</span></h1>
+        <div class="bg-slate-100 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">Premium Hub</div>
+    </nav>
+
+    <header class="p-8 pb-4">
+        <h2 class="text-[44px] font-black leading-none tracking-tighter mb-4">Purely <br><span class="text-brand italic">Organic.</span></h2>
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2" id="categories">
+            <button onclick="filter('All')" class="active-pill px-5 py-2 rounded-full text-[9px] font-black uppercase bg-white text-slate-400 shadow-sm border border-slate-100 whitespace-nowrap">All</button>
+            <button onclick="filter('Vegetables')" class="px-5 py-2 rounded-full text-[9px] font-black uppercase bg-white text-slate-400 shadow-sm border border-slate-100 whitespace-nowrap">Vegetables</button>
+            <button onclick="filter('Fruits')" class="px-5 py-2 rounded-full text-[9px] font-black uppercase bg-white text-slate-400 shadow-sm border border-slate-100 whitespace-nowrap">Fruits</button>
+            <button onclick="filter('Spices')" class="px-5 py-2 rounded-full text-[9px] font-black uppercase bg-white text-slate-400 shadow-sm border border-slate-100 whitespace-nowrap">Spices</button>
+        </div>
+    </header>
+
+    <main id="grid" class="p-4 grid grid-cols-2 gap-4 pb-20"></main>
+
+    <footer class="p-8 bg-slate-900 text-white rounded-t-[3rem] mt-10">
+        <h2 class="font-black text-xl italic uppercase tracking-tighter mb-6">Lux<span class="text-brand">Fresh</span></h2>
+        <div class="space-y-4 mb-8">
+            <div><p class="text-[8px] uppercase font-black opacity-40 mb-1">Location</p><p id="f-loc" class="text-xs font-bold text-white/80">---</p></div>
+            <div><p class="text-[8px] uppercase font-black opacity-40 mb-1">Hours</p><p id="f-hours" class="text-xs font-bold text-white/80">---</p></div>
+        </div>
+        <div class="flex gap-3">
+            <a id="f-wa" href="#" class="btn-brand px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest">WhatsApp</a>
+            <a id="f-yt" href="#" class="bg-white/10 px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest text-white">YouTube</a>
+        </div>
+        <p class="text-[7px] font-bold opacity-20 mt-10 text-center uppercase tracking-[0.4em]">Designed by sirat ibn seif Tech © 2026</p>
+    </footer>
+
+    <button id="cart-trigger" onclick="toggleDrawer()" class="fixed bottom-8 right-6 btn-brand w-16 h-16 rounded-full shadow-2xl z-40 hidden flex items-center justify-center animate-bounce border-4 border-white">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+        <span id="cart-count" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[10px] w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">0</span>
+    </button>
+
+    <div id="drawer" class="fixed bottom-0 left-0 right-0 z-50 translate-y-full transition-transform duration-300">
+        <div class="glass mx-4 mb-8 p-6 rounded-[2.5rem] shadow-2xl border border-white">
+            <div id="basket-items" class="max-h-52 overflow-y-auto mb-6 space-y-3 no-scrollbar"></div>
+            <button onclick="pay()" class="w-full bg-slate-900 text-white p-5 rounded-3xl flex justify-between items-center active:scale-95 transition-all">
+                <span id="total-disp" class="font-black text-lg">KES 0</span>
+                <span id="btn-txt" class="btn-brand px-6 py-2 rounded-2xl text-[10px] font-black uppercase">M-Pesa Checkout</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let basket = {}, allProducts = [];
+        const icons = ['🥬', '🍅', '🥕', '🍏', '🥑', '🍋'];
+
+        async function init() {
+            const resA = await fetch('/api/announcement');
+            const ann = await resA.json();
+            if(ann.themeColor) document.documentElement.style.setProperty('--brand', ann.themeColor);
+            if(ann.active) { document.getElementById('ann-bar').innerText = ann.text; document.getElementById('ann-bar').classList.remove('hidden'); }
+            document.getElementById('f-loc').innerText = ann.location;
+            document.getElementById('f-hours').innerText = ann.hours;
+            document.getElementById('f-wa').href = `https://wa.me/${ann.whatsapp}`;
+            document.getElementById('f-yt').innerText = ann.youtube;
+
+            const bg = document.getElementById('bg-icons');
+            for(let i=0; i<10; i++) {
+                const l = document.createElement('div'); l.className='leaf'; l.innerText=icons[Math.floor(Math.random()*6)];
+                l.style.left = Math.random()*100+'vw'; l.style.animationDelay = Math.random()*15+'s'; bg.appendChild(l);
+            }
+
+            const resP = await fetch('/api/products');
+            allProducts = await resP.json();
+            renderGrid(allProducts);
+        }
+
+        function renderGrid(list) {
+            document.getElementById('grid').innerHTML = list.map(p => `
+                <div class="glass p-2 rounded-[2.2rem] border border-white shadow-xl shadow-slate-200/50">
+                    <img src="${p.image}" class="h-32 w-full object-cover rounded-[1.8rem] mb-2">
+                    <div class="px-2 pb-1">
+                        <p class="text-[9px] font-black uppercase text-slate-800 truncate">${p.name}</p>
+                        <div class="flex justify-between items-center mt-1">
+                            <p class="text-brand font-black text-xs">KES ${p.price}</p>
+                            <button onclick="add('${p.name}', ${p.price})" class="bg-slate-900 text-white w-8 h-8 rounded-xl font-bold">+</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filter(cat) {
+            document.querySelectorAll('#categories button').forEach(b => b.classList.remove('active-pill'));
+            event.target.classList.add('active-pill');
+            renderGrid(cat === 'All' ? allProducts : allProducts.filter(p => p.category === cat));
+        }
+
+        function add(n, p) {
+            if(basket[n]) basket[n].qty++;
+            else basket[n] = { price: p, qty: 1 };
+            updateUI();
+            if(navigator.vibrate) navigator.vibrate(40);
+        }
+
+        function changeQty(n, d) {
+            basket[n].qty += d;
+            if(basket[n].qty <= 0) delete basket[n];
+            updateUI();
+        }
+
+        function updateUI() {
+            const items = Object.keys(basket);
+            const sum = items.reduce((a, n) => a + (basket[n].price * basket[n].qty), 0);
+            const count = items.reduce((a, n) => a + basket[n].qty, 0);
+            document.getElementById('total-disp').innerText = `KES ${sum.toLocaleString()}`;
+            document.getElementById('cart-count').innerText = count;
+            document.getElementById('cart-trigger').classList.toggle('hidden', count === 0);
+            if(count === 0) document.getElementById('drawer').classList.add('translate-y-full');
+
+            document.getElementById('basket-items').innerHTML = items.map(n => `
+                <div class="flex justify-between items-center bg-white/50 p-3 rounded-2xl border border-white">
+                    <div class="flex flex-col"><span class="text-[10px] font-black uppercase">${n}</span><span class="text-brand font-black text-[9px]">KES ${basket[n].price}</span></div>
+                    <div class="flex items-center gap-3 bg-slate-900 text-white rounded-xl p-1">
+                        <button onclick="changeQty('${n}', -1)" class="w-6 h-6 font-bold">-</button>
+                        <span class="text-xs font-black min-w-[20px] text-center">${basket[n].qty}</span>
+                        <button onclick="changeQty('${n}', 1)" class="w-6 h-6 font-bold">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDrawer() { document.getElementById('drawer').classList.toggle('translate-y-full'); }
+
+        async function pay() {
+            const phone = prompt("M-Pesa Number (07xx):");
+            if(!phone) return;
+            const items = Object.keys(basket);
+            const sum = items.reduce((a, n) => a + (basket[n].price * basket[n].qty), 0);
+            const ngrokUrl = window.location.origin;
+
+            document.getElementById('btn-txt').innerText = "WAITING...";
+            const res = await fetch('/api/stkpush', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ phone, amount: sum, items: items.map(n => `${n} (${basket[n].qty})`), ngrokUrl }) 
+            });
+            
+            if(res.ok) { alert("Check your phone!"); basket = {}; updateUI(); }
+            document.getElementById('btn-txt').innerText = "M-PESA CHECKOUT";
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
